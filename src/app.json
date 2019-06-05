@@ -1,5 +1,6 @@
 {
   "cloud": true,
+  "requiredBackgroundModes": ["audio"],
   "pages": [
     "pages/index/main",
     "pages/user/main",
@@ -11,6 +12,7 @@
     "backgroundColor": "#f5f7f8",
     "backgroundColorTop": "#f5f7f8",
     "backgroundColorBottom": "#f5f7f8",
+    "navigationBarTextStyle": "black",
     "navigationStyle": "custom"
   },
   "tabBar": {

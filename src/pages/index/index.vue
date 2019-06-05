@@ -1,7 +1,8 @@
 <template>
   <div class="home">
+    <div class="safe-top" :style="safeHeight"></div>
     <div :style="safeHeight"></div>
-    <div class="home-search">
+    <div class="home-search" @click="goSearch">
       <img :src="searchIcon">
     </div>
     <div class="home-banner">
@@ -12,7 +13,7 @@
         :autoplay="true"
         :circular="true">
         <block v-for="item in banner" :key="item.id">
-          <swiper-item>
+          <swiper-item @click="goDetail(item, 'topMusicList')">
             <img :src="item.cover">
           </swiper-item>
         </block>
@@ -33,9 +34,9 @@
       </div>
       -->
       <div class="home-music-songs">
-        <div class="home-music-title">今日单曲</div>
+        <div class="home-music-title">推荐单曲</div>
         <ul>
-          <li class="home-music-songs-info" v-for="item in recommendMusic" :key="item.id" @click="goDetail(item)">
+          <li class="home-music-songs-info" v-for="item in recommendMusic" :key="item.id" @click="goDetail(item, 'recMusicList')">
             <img :src="item.cover"/>
             <div class="home-music-songs-info-content">
               <p class="home-music-songs-info-content-name">{{item.name}}</p>
@@ -48,11 +49,19 @@
         </ul>
       </div>
     </div>
+    <vplay/>
   </div>
 </template>
 
 <script>
+import store from '@/store.js'
+import vplay from '@/components/player'
+
+const db = wx.cloud.database()
 export default {
+  components: {
+    vplay
+  },
   data () {
     return {
       searchIcon: '/static/images/search.svg',
@@ -85,13 +94,24 @@ export default {
         obj.songlist.some((item, index) => {
           arr[index] = {}
           arr[index].name = item.data.albumname
+          arr[index].songmid = item.data.songmid
           arr[index].id = item.data.albumid
+          arr[index].singer = ''
+          item.data.singer.map(v => {
+            arr[index].singer = arr[index].singer + v.name + ' '
+          })
           let temp = item.data.albumid.toString().slice(-2)
           if (temp[0] === '0') temp = temp[1]
           arr[index].cover = `http://imgcache.qq.com/music/photo/album_300/${temp}/300_albumpic_${item.data.albumid}_0.jpg`
+          db.collection('favorite').doc(item.data.songmid).get().then(res => {
+            arr[index].like = true
+          }).catch(res => {
+            arr[index].like = false
+          })
           if (index === 8) return true
         })
         this.banner = arr
+        store.state.topMusicList = arr
       })
     },
     getRecommendMusic () {
@@ -107,6 +127,7 @@ export default {
           arr[index] = {}
           arr[index].name = item.data.albumname
           arr[index].id = item.data.albumid
+          arr[index].songmid = item.data.songmid
           arr[index].singer = ''
           item.data.singer.map(v => {
             arr[index].singer = arr[index].singer + v.name + ' '
@@ -114,25 +135,35 @@ export default {
           let temp = item.data.albumid.toString().slice(-2)
           if (temp[0] === '0') temp = temp[1]
           arr[index].cover = `http://imgcache.qq.com/music/photo/album_300/${temp}/300_albumpic_${item.data.albumid}_0.jpg`
-          if (index === 8) return true
+          db.collection('favorite').doc(item.data.songmid).get().then(res => {
+            arr[index].like = true
+          }).catch(res => {
+            arr[index].like = false
+          })
         })
         this.recommendMusics = arr
         this.recommendMusic = arr.slice(0, 10)
+        store.state.recMusicList = this.recommendMusic
       })
     },
     init () {
-      // if (!this.userInfo.nickName) {
-      //   wx.reLaunch({
-      //     url: 'pages/login/main'
-      //   })
-      // }
+      if (!this.userInfo.nickName) {
+        wx.reLaunch({
+          url: 'pages/login/main'
+        })
+      }
       this.getTopMusic()
       this.getRecommendMusic()
     },
-    goDetail (item) {
-      console.log(`../detail/main?name=${item.name}&singer=${item.singer}&cover=${item.cover}`)
+    goDetail (item, type) {
+      store.state.currentSong = item
       wx.navigateTo({
-        url: `../detail/main?name=${item.name}&singer=${item.singer}&cover=${item.cover}`
+        url: `../detail/main?from=${type}`
+      })
+    },
+    goSearch () {
+      wx.navigateTo({
+        url: '../search/main'
       })
     }
   },

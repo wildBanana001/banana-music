@@ -55,4 +55,11 @@ export default {
   -webkit-transition: width 2s;
   -o-transition: width 2s;
 }
+.safe-top {
+  position: fixed;
+  background: #f5f7f8;
+  z-index: 999;
+  width: 100vw;
+  top: 0;
+}
 </style>

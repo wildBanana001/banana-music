@@ -1,7 +1,7 @@
 <template>
   <div class="login">
     <img :src="bgImg">
-    <button @getuserinfo="onGetUserinfo" open-type="getUserInfo">welcome</button>
+    <button @getuserinfo="onGetUserinfo" open-type="getUserInfo">登录</button>
   </div>
 </template>
 
